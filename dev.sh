@@ -5,7 +5,7 @@ dev() {
   if [ "$1" = "cd" ]; then
     shift # Remove "cd" from arguments
     local target_dir_name="$1"
-    local search_paths=("$HOME/config" "$HOME/workspace") # Add more paths here if needed
+    local search_paths=("$HOME/config" "$HOME/configs" "$HOME/workspace") # Add more paths here if needed
 
     if [ -z "$target_dir_name" ]; then
       echo "Usage: dev cd <directory_name>"

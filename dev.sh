@@ -21,10 +21,12 @@ dev() {
     # Expand ~ to the full home directory path
     local home_dir="$HOME"
 
+    local resolved_search_root
+
     for search_root_orig in "${search_paths[@]}"; do
       # Resolve the search_root_orig to its canonical, absolute path.
       # This handles cases where search_root_orig is a symlink (e.g., $HOME/config).
-      local resolved_search_root
+      
       resolved_search_root=$(readlink -f "$search_root_orig" 2>/dev/null)
 
       # If readlink failed or the resolved path is not a directory, skip this search_root_orig.

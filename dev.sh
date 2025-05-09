@@ -21,15 +21,28 @@ dev() {
     # Expand ~ to the full home directory path
     local home_dir="$HOME"
 
-    for base_path in "${search_paths[@]}"; do
-      # Attempt to find a directory matching the partial name
-      # -maxdepth 1 ensures we only search direct children of base_path
-      # -type d specifies that we are looking for directories
-      # -iname makes the search case-insensitive for the target_dir_name
-      # head -n 1 takes the first match if multiple exist
-      local potential_match=$(find "$base_path" -maxdepth 1 -type d -iname "*$target_dir_name*" -print -quit 2>/dev/null)
+    for search_root_orig in "${search_paths[@]}"; do
+      # Resolve the search_root_orig to its canonical, absolute path.
+      # This handles cases where search_root_orig is a symlink (e.g., $HOME/config).
+      local resolved_search_root
+      resolved_search_root=$(readlink -f "$search_root_orig" 2>/dev/null)
+
+      # If readlink failed or the resolved path is not a directory, skip this search_root_orig.
+      if [[ -z "$resolved_search_root" || ! -d "$resolved_search_root" ]]; then
+        # Silently skip invalid or non-directory paths.
+        continue
+      fi
+
+      # Attempt to find a directory matching the partial name within the resolved_search_root.
+      # Use -L with find:
+      #   - So that if an entry *within* resolved_search_root (at maxdepth 1)
+      #     is a symlink to a directory, -type d still considers it a directory, and find lists the symlink path.
+      # The -print -quit is a GNU find extension for efficiency.
+      local potential_match=$(find -L "$resolved_search_root" -maxdepth 1 -type d -iname "*$target_dir_name*" -print -quit 2>/dev/null)
       
       if [ -n "$potential_match" ] && [ -d "$potential_match" ]; then
+        # The [ -d "$potential_match" ] check correctly evaluates to true
+        # if $potential_match is a directory OR a symlink to a directory.
         found_path="$potential_match"
         break 
       fi

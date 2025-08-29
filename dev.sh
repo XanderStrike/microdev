@@ -59,14 +59,42 @@ dev() {
       done
       return 1
     fi
+  elif [ "$1" = "clone" ]; then
+    shift # Remove "clone" from arguments
+    local github_url="$1"
+    if [ -z "$github_url" ]; then
+      echo "Usage: dev clone <github_url>"
+      return 1
+    fi
+
+    # Extract repository name from URL
+    local repo_name=$(basename "$github_url" .git)
+    local target_dir="$HOME/workspace/$repo_name"
+
+    # Check if directory already exists
+    if [ -d "$target_dir" ]; then
+      echo "Directory $target_dir already exists. Changing to it."
+      cd "$target_dir"
+    else
+      # Clone the repository
+      git clone "$github_url" "$target_dir"
+      if [ $? -eq 0 ]; then
+        cd "$target_dir"
+        echo "--> Cloned and switched to $(pwd)"
+      else
+        echo "Error: Failed to clone repository."
+        return 1
+      fi
+    fi
   else
     # Allow for future 'dev' subcommands
     if [ -n "$1" ]; then
         echo "Error: Unknown dev command '$1'."
     fi
-    echo "Usage: dev cd <directory_name>"
+    echo "Usage: dev [command]"
     echo "Available commands:"
-    echo "  cd <directory_name>  - Change to the specified directory in predefined locations."
+    echo "  cd <directory_name>    - Change to the specified directory in predefined locations."
+    echo "  clone <github_url>     - Clone a GitHub repository into ~/workspace/ and change directory."
     return 1
   fi
 }

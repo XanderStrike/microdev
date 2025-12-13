@@ -1,6 +1,16 @@
 #!/bin/bash
 # Shell function for managing git repositories and code projects
 
+# Detect if script is being piped to bash (not sourced or executed directly)
+# We need to be careful about this detection to avoid false positives
+SCRIPT_PIPED=false
+
+# Check if we're being executed by bash without terminal input
+# AND we don't have any arguments (which suggests piped execution)
+if [[ ! -t 0 ]] && [[ $# -eq 0 ]]; then
+  SCRIPT_PIPED=true
+fi
+
 # Function to check for updates
 check_for_updates() {
   local script_path="${BASH_SOURCE[0]}"
@@ -227,6 +237,10 @@ dev() {
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
   # Script is being sourced, use the function as-is
   :
+elif [[ "$SCRIPT_PIPED" == "true" ]]; then
+  # Script is being piped to bash, automatically run install
+  echo "Detected piped execution - running microdev installation..."
+  dev "install"
 else
   # Script is being executed directly, call the function with all arguments
   dev "$@"

@@ -26,7 +26,7 @@ dev() {
     for search_root_orig in "${search_paths[@]}"; do
       # Resolve the search_root_orig to its canonical, absolute path.
       # This handles cases where search_root_orig is a symlink (e.g., $HOME/config).
-      
+
       resolved_search_root=$(readlink -f "$search_root_orig" 2>/dev/null)
 
       # If readlink failed or the resolved path is not a directory, skip this search_root_orig.
@@ -41,12 +41,12 @@ dev() {
       #     is a symlink to a directory, -type d still considers it a directory, and find lists the symlink path.
       # The -print -quit is a GNU find extension for efficiency.
       local potential_match=$(find -L "$resolved_search_root" -maxdepth 1 -type d -iname "*$target_dir_name*" -print -quit 2>/dev/null)
-      
+
       if [ -n "$potential_match" ] && [ -d "$potential_match" ]; then
         # The [ -d "$potential_match" ] check correctly evaluates to true
         # if $potential_match is a directory OR a symlink to a directory.
         found_path="$potential_match"
-        break 
+        break
       fi
     done
 
@@ -86,6 +86,37 @@ dev() {
         return 1
       fi
     fi
+  elif [ "$1" = "new" ]; then
+    shift # Remove "new" from arguments
+    local dir_name="$1"
+    if [ -z "$dir_name" ]; then
+      echo "Usage: dev new <directory_name>"
+      return 1
+    fi
+
+    local target_dir="$HOME/workspace/$dir_name"
+
+    # Check if directory already exists
+    if [ -d "$target_dir" ]; then
+      echo "Error: Directory $target_dir already exists."
+      return 1
+    else
+      # Create the directory
+      mkdir -p "$target_dir"
+      if [ $? -eq 0 ]; then
+        cd "$target_dir"
+        git init
+        if [ $? -eq 0 ]; then
+          echo "--> Created and initialized git repo in $(pwd)"
+        else
+          echo "Error: Failed to initialize git repository."
+          return 1
+        fi
+      else
+        echo "Error: Failed to create directory."
+        return 1
+      fi
+    fi
   else
     # Allow for future 'dev' subcommands
     if [ -n "$1" ]; then
@@ -95,7 +126,7 @@ dev() {
     echo "Available commands:"
     echo "  cd <directory_name>    - Change to the specified directory in predefined locations."
     echo "  clone <github_url>     - Clone a GitHub repository into ~/workspace/ and change directory."
+    echo "  new <directory_name>   - Create a new directory in ~/workspace/, change to it, and initialize a git repository."
     return 1
   fi
 }
-

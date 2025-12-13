@@ -13,12 +13,26 @@ check_for_updates() {
     local remote_url=$(git -C "$script_dir" config --get remote.origin.url 2>/dev/null)
 
     if [ -n "$remote_url" ]; then
-      echo "Pulling latest changes in $script_dir..."
+      # Check if we should pull today (only once per day)
+      local last_pull_file="$script_dir/.last_pull"
+      local today=$(date +%Y-%m-%d)
+      local last_pull_date=""
 
-      # Pull latest changes in background silently
-      git -C "$script_dir" pull --quiet >/dev/null 2>&1 &
+      if [ -f "$last_pull_file" ]; then
+        last_pull_date=$(cat "$last_pull_file")
+      fi
 
-      echo "Latest changes pulled."
+      if [ "$today" != "$last_pull_date" ]; then
+        echo "Pulling latest changes in $script_dir..."
+
+        # Pull latest changes in background silently
+        git -C "$script_dir" pull --quiet >/dev/null 2>&1 &
+
+        # Record today's date
+        echo "$today" > "$last_pull_file"
+
+        echo "Latest changes pulled."
+      fi
     fi
   fi
 }

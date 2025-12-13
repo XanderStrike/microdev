@@ -167,7 +167,7 @@ dev() {
     fi
 
     # Clone microdev repository
-    local microdev_repo="git@github.com:XanderStrike/microdev.git"
+    local microdev_repo="https://github.com/XanderStrike/microdev.git"
     local microdev_dir="$HOME/workspace/microdev"
 
     if [ ! -d "$microdev_dir" ]; then

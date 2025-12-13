@@ -7,6 +7,11 @@ check_for_updates() {
   local script_dir
   script_dir=$(cd "$(dirname "$script_path")" && pwd)
 
+  # If script_dir doesn't contain "microdev", assume it's $HOME/workspace/microdev/
+  if [[ "$script_dir" != *"microdev"* ]]; then
+    script_dir="$HOME/workspace/microdev"
+  fi
+
   # Check if there's a remote repository for this script
   if [ -d "$script_dir/.git" ]; then
     local current_branch=$(git -C "$script_dir" branch --show-current 2>/dev/null || echo "main")

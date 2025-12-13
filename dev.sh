@@ -1,7 +1,42 @@
 #!/bin/bash
 # Shell function for managing git repositories and code projects
 
+# Function to check for updates
+check_for_updates() {
+  local script_path="${BASH_SOURCE[0]}"
+  local script_dir
+  script_dir=$(cd "$(dirname "$script_path")" && pwd)
+
+  # Check if there's a remote repository for this script
+  if [ -d "$script_dir/.git" ]; then
+    local current_branch=$(git -C "$script_dir" branch --show-current 2>/dev/null || echo "main")
+    local remote_url=$(git -C "$script_dir" config --get remote.origin.url 2>/dev/null)
+
+    if [ -n "$remote_url" ]; then
+      echo "Checking for updates in $script_dir..."
+
+      # Fetch latest changes
+      git -C "$script_dir" fetch --quiet 2>/dev/null
+
+      # Check if local branch is behind remote
+      local local_commit=$(git -C "$script_dir" rev-parse "@{0}" 2>/dev/null)
+      local remote_commit=$(git -C "$script_dir" rev-parse "@{u}" 2>/dev/null)
+
+      if [ -n "$local_commit" ] && [ -n "$remote_commit" ] && [ "$local_commit" != "$remote_commit" ]; then
+        echo "Update available! Run 'git pull' in $script_dir to update."
+        return 1
+      else
+        echo "No updates available."
+        return 0
+      fi
+    fi
+  fi
+
+  return 0
+}
+
 dev() {
+  check_for_updates
   if [ "$1" = "cd" ]; then
     shift # Remove "cd" from arguments
     local target_dir_name="$1"

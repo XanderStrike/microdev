@@ -130,3 +130,12 @@ dev() {
     return 1
   fi
 }
+
+# Handle direct script invocation with arguments
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  # Script is being sourced, use the function as-is
+  :
+else
+  # Script is being executed directly, call the function with all arguments
+  dev "$@"
+fi

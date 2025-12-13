@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shell function to quickly change directory to predefined project locations
+# Shell function for managing git repositories and code projects
 
 dev() {
   if [ "$1" = "cd" ]; then
@@ -99,8 +99,3 @@ dev() {
   fi
 }
 
-# Optional: You could add an alias for convenience if you always type `dev cd`
-# alias dcd='dev cd'
-
-# To make this command available, add the following line to your ~/.bashrc or ~/.zshrc:
-# source /Users/xander/workspace/microdev/dev_cd_function.sh

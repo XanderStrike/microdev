@@ -15,8 +15,8 @@ check_for_updates() {
     if [ -n "$remote_url" ]; then
       echo "Pulling latest changes in $script_dir..."
 
-      # Pull latest changes
-      git -C "$script_dir" pull --quiet 2>/dev/null
+      # Pull latest changes in background silently
+      git -C "$script_dir" pull --quiet >/dev/null 2>&1 &
 
       echo "Latest changes pulled."
     fi

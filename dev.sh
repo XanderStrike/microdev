@@ -159,6 +159,55 @@ dev() {
         return 1
       fi
     fi
+  elif [ "$1" = "install" ]; then
+    # Create workspace directory if it doesn't exist
+    if [ ! -d "$HOME/workspace" ]; then
+      mkdir -p "$HOME/workspace"
+      echo "Created workspace directory at $HOME/workspace"
+    fi
+
+    # Clone microdev repository
+    local microdev_repo="git@github.com:XanderStrike/microdev.git"
+    local microdev_dir="$HOME/workspace/microdev"
+
+    if [ ! -d "$microdev_dir" ]; then
+      echo "Cloning microdev repository..."
+      git clone "$microdev_repo" "$microdev_dir"
+      if [ $? -ne 0 ]; then
+        echo "Error: Failed to clone microdev repository."
+        return 1
+      fi
+    else
+      echo "microdev repository already exists at $microdev_dir"
+    fi
+
+    # Source the dev.sh script from the appropriate profile file
+    local profile_file=""
+    if [ -f "$HOME/.bashrc" ]; then
+      profile_file="$HOME/.bashrc"
+    elif [ -f "$HOME/.bash_profile" ]; then
+      profile_file="$HOME/.bash_profile"
+    elif [ -f "$HOME/.profile" ]; then
+      profile_file="$HOME/.profile"
+    elif [ -f "$HOME/.zprofile" ]; then
+      profile_file="$HOME/.zprofile"
+    else
+      echo "Error: Could not find .bashrc, .bash_profile, .profile, or .zprofile"
+      return 1
+    fi
+
+    # Check if the source command already exists in the profile file
+    local source_line="source $microdev_dir/dev.sh"
+    if ! grep -qF "$source_line" "$profile_file"; then
+      echo "Adding source command to $profile_file"
+      echo "" >> "$profile_file"
+      echo "# Source microdev dev.sh" >> "$profile_file"
+      echo "$source_line" >> "$profile_file"
+    else
+      echo "Source command already exists in $profile_file"
+    fi
+
+    echo "Installation complete. Please restart your shell or run 'source $profile_file' to use the dev command."
   else
     # Allow for future 'dev' subcommands
     if [ -n "$1" ]; then
@@ -169,6 +218,7 @@ dev() {
     echo "  cd <directory_name>    - Change to the specified directory in predefined locations."
     echo "  clone <github_url>     - Clone a GitHub repository into ~/workspace/ and change directory."
     echo "  new <directory_name>   - Create a new directory in ~/workspace/, change to it, and initialize a git repository."
+    echo "  install                - Install microdev by cloning the repository and setting up the dev command."
     return 1
   fi
 }

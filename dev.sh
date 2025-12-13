@@ -13,26 +13,14 @@ check_for_updates() {
     local remote_url=$(git -C "$script_dir" config --get remote.origin.url 2>/dev/null)
 
     if [ -n "$remote_url" ]; then
-      echo "Checking for updates in $script_dir..."
+      echo "Pulling latest changes in $script_dir..."
 
-      # Fetch latest changes
-      git -C "$script_dir" fetch --quiet 2>/dev/null
+      # Pull latest changes
+      git -C "$script_dir" pull --quiet 2>/dev/null
 
-      # Check if local branch is behind remote
-      local local_commit=$(git -C "$script_dir" rev-parse "@{0}" 2>/dev/null)
-      local remote_commit=$(git -C "$script_dir" rev-parse "@{u}" 2>/dev/null)
-
-      if [ -n "$local_commit" ] && [ -n "$remote_commit" ] && [ "$local_commit" != "$remote_commit" ]; then
-        echo "Update available! Run 'git pull' in $script_dir to update."
-        return 1
-      else
-        echo "No updates available."
-        return 0
-      fi
+      echo "Latest changes pulled."
     fi
   fi
-
-  return 0
 }
 
 dev() {

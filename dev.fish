@@ -170,3 +170,9 @@ function _microdev_check_updates
         echo "Latest changes pulled."
     end
 end
+
+# Auto-run install when piped to fish (e.g. curl ... | fish)
+if not isatty stdin
+    echo "Detected piped execution - running microdev installation..."
+    dev install
+end

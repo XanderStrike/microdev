@@ -21,17 +21,24 @@ function dev
             set -l target_dir_name $argv[2]
             set -l found_path ""
 
-            for search_root_orig in $search_paths
-                set -l resolved_search_root (readlink -f "$search_root_orig" 2>/dev/null)
+            # Prefer exact (case-insensitive) match first, then fall back to partial match.
+            for pattern in "$target_dir_name" "*$target_dir_name*"
+                for search_root_orig in $search_paths
+                    set -l resolved_search_root (readlink -f "$search_root_orig" 2>/dev/null)
 
-                if test -z "$resolved_search_root"; or not test -d "$resolved_search_root"
-                    continue
+                    if test -z "$resolved_search_root"; or not test -d "$resolved_search_root"
+                        continue
+                    end
+
+                    set -l potential_match (find -L "$resolved_search_root" -maxdepth 1 -type d -iname "$pattern" -print -quit 2>/dev/null)
+
+                    if test -n "$potential_match"; and test -d "$potential_match"
+                        set found_path "$potential_match"
+                        break
+                    end
                 end
 
-                set -l potential_match (find -L "$resolved_search_root" -maxdepth 1 -type d -iname "*$target_dir_name*" -print -quit 2>/dev/null)
-
-                if test -n "$potential_match"; and test -d "$potential_match"
-                    set found_path "$potential_match"
+                if test -n "$found_path"
                     break
                 end
             end

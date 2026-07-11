@@ -69,37 +69,27 @@ dev() {
     fi
 
     local found_path=""
-
-    # Expand ~ to the full home directory path
-    local home_dir="$HOME"
-
     local resolved_search_root
+    local potential_match
 
-    for search_root_orig in "${search_paths[@]}"; do
-      # Resolve the search_root_orig to its canonical, absolute path.
-      # This handles cases where search_root_orig is a symlink (e.g., $HOME/config).
+    # Prefer exact (case-insensitive) matches, then fall back to partial matches.
+    for pattern in "$target_dir_name" "*$target_dir_name*"; do
+      for search_root_orig in "${search_paths[@]}"; do
+        # Resolve to canonical path (handles symlinks like $HOME/config).
+        resolved_search_root=$(readlink -f "$search_root_orig" 2>/dev/null)
 
-      resolved_search_root=$(readlink -f "$search_root_orig" 2>/dev/null)
+        if [[ -z "$resolved_search_root" || ! -d "$resolved_search_root" ]]; then
+          continue
+        fi
 
-      # If readlink failed or the resolved path is not a directory, skip this search_root_orig.
-      if [[ -z "$resolved_search_root" || ! -d "$resolved_search_root" ]]; then
-        # Silently skip invalid or non-directory paths.
-        continue
-      fi
+        # Use -L so symlinks to directories within the search root are followed.
+        potential_match=$(find -L "$resolved_search_root" -maxdepth 1 -type d -iname "$pattern" -print -quit 2>/dev/null)
 
-      # Attempt to find a directory matching the partial name within the resolved_search_root.
-      # Use -L with find:
-      #   - So that if an entry *within* resolved_search_root (at maxdepth 1)
-      #     is a symlink to a directory, -type d still considers it a directory, and find lists the symlink path.
-      # The -print -quit is a GNU find extension for efficiency.
-      local potential_match=$(find -L "$resolved_search_root" -maxdepth 1 -type d -iname "*$target_dir_name*" -print -quit 2>/dev/null)
-
-      if [ -n "$potential_match" ] && [ -d "$potential_match" ]; then
-        # The [ -d "$potential_match" ] check correctly evaluates to true
-        # if $potential_match is a directory OR a symlink to a directory.
-        found_path="$potential_match"
-        break
-      fi
+        if [ -n "$potential_match" ] && [ -d "$potential_match" ]; then
+          found_path="$potential_match"
+          break 2
+        fi
+      done
     done
 
     if [ -n "$found_path" ]; then
